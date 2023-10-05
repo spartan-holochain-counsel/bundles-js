@@ -1,0 +1,7 @@
+node_modules
+dist
+tests/fake_zome_*.wasm
+tests/fake_dna_*.dna
+tests/fake_happ_*.happ
+tests/fake_gui_*.zip
+tests/fake_webhapp_*.webhapp

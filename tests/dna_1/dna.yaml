@@ -1,0 +1,15 @@
+manifest_version: "1"
+name: fake-dna-1
+integrity:
+  origin_time: 2023-01-01T00:00:00.000000Z
+  network_seed: ~
+  properties: ~
+  zomes:
+    - name: fake-wasm-1
+      bundled: ../fake_wasm_1.wasm
+coordinator:
+  zomes:
+    - name: fake-wasm-2
+      bundled: ../fake_wasm_2.wasm
+      dependencies:
+        - name: fake-wasm-1

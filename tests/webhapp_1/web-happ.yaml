@@ -1,0 +1,6 @@
+manifest_version: "1"
+name: fake-webhapp-1
+ui:
+  bundled: "../fake_gui_1.zip"
+happ_manifest:
+  bundled: "../fake_happ_1.happ"

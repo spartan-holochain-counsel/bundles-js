@@ -1,0 +1,36 @@
+{
+  "name": "@spartan-hc/bundles",
+  "version": "0.0.0",
+  "description": "A toolkit for managing Holochain bundles (.dna, .happ, .webhapp)",
+  "type": "module",
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "browser": "dist/hc-bundles.js",
+  "files": [
+    "README.md",
+    "src/index.js",
+    "src/utils.js",
+    "dist/**"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matthew Brisebois <matthew@webheroes.ca>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spartan-holochain-counsel/bundles-js/"
+  },
+  "dependencies": {
+    "@msgpack/msgpack": "^3.0.0-beta2",
+    "@whi/weblogger": "^0.2.0",
+    "gzip-js": "^0.3.2"
+  },
+  "devDependencies": {
+    "@whi/json": "^0.1.7",
+    "chai": "^4.3.10",
+    "mocha": "^10.2.0",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
+  }
+}

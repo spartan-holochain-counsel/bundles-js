@@ -1,0 +1,10 @@
+manifest_version: "1"
+name: fake-happ-1
+description: Empty testing files
+roles:
+  - name: fake-dna-1
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      bundled: ../fake_dna_1.dna
