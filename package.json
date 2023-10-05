@@ -1,6 +1,6 @@
 {
   "name": "@spartan-hc/bundles",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A toolkit for managing Holochain bundles (.dna, .happ, .webhapp)",
   "type": "module",
   "main": "src/index.js",
