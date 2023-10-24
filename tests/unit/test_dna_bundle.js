@@ -9,6 +9,9 @@ import { expect }			from 'chai';
 
 import json				from '@whi/json';
 import {
+    dnaConfig,
+}					from '../utils.js';
+import {
     Bundle,
 }					from '../../src/index.js';
 
@@ -18,13 +21,27 @@ const DNA_1_BYTES			= await readFile( path.join( __dirname, `../fake_dna_1.dna` 
 
 
 function basic_tests () {
-    it("should init DNA bundle", async () => {
+    it("should init DNA bundle with bytes", async function () {
 	const bundle			= new Bundle( DNA_1_BYTES );
 
 	expect( bundle.type		).to.equal("dna");
 
 	const zomes			= bundle.zomes();
 	log.debug("Zomes:", zomes );
+    });
+
+    it("should create DNA bundle", async function () {
+	const bundle			= Bundle.createDna( dnaConfig() );
+
+	expect( bundle.type		).to.equal("dna");
+
+	const bytes			= bundle.toBytes();
+
+	expect( bytes			).to.have.length( 241 );
+
+	const rebundled			= new Bundle( bytes );
+
+	expect( bundle.type		).to.equal( rebundled.type );
     });
 
 }

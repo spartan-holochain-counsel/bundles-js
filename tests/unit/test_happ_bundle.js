@@ -9,6 +9,10 @@ import { expect }			from 'chai';
 
 import json				from '@whi/json';
 import {
+    dnaConfig,
+    happConfig,
+}					from '../utils.js';
+import {
     Bundle,
 }					from '../../src/index.js';
 
@@ -24,7 +28,26 @@ function basic_tests () {
 	expect( bundle.type		).to.equal("happ");
 
 	const dnas			= bundle.dnas();
-	log.debug("DNAs:", dnas );
+	log.debug("DNAs:", dnas.map( dna => String(dna)) );
+    });
+
+    it("should create hApp bundle", async function () {
+	const config			= happConfig([{
+	    "dna": {
+		"bytes":		Bundle.createDna( dnaConfig() ).toBytes(),
+	    },
+	}]);
+	const bundle			= Bundle.createHapp( config );
+
+	expect( bundle.type		).to.equal("happ");
+
+	const bytes			= bundle.toBytes();
+
+	expect( bytes			).to.have.length( 424 );
+
+	const rebundled			= new Bundle( bytes );
+
+	expect( bundle.type		).to.equal( rebundled.type );
     });
 
 }

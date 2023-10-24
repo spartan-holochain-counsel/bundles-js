@@ -9,6 +9,11 @@ import { expect }			from 'chai';
 
 import json				from '@whi/json';
 import {
+    dnaConfig,
+    happConfig,
+    webhappConfig,
+}					from '../utils.js';
+import {
     Bundle,
 }					from '../../src/index.js';
 
@@ -27,6 +32,29 @@ function basic_tests () {
 	const ui			= bundle.ui();
 	log.debug("hApp:", happ );
 	log.debug("UI:", ui );
+    });
+
+    it("should create Webhapp bundle", async function () {
+	const happ_config		= happConfig([{
+	    "dna": {
+		"bytes":		Bundle.createDna( dnaConfig() ).toBytes(),
+	    },
+	}]);
+	const happ_bundle		= Bundle.createHapp( happ_config );
+	const config			= webhappConfig({
+	    "bytes": happ_bundle.toBytes(),
+	});
+	const bundle			= Bundle.createWebhapp( config );
+
+	expect( bundle.type		).to.equal("webhapp");
+
+	const bytes			= bundle.toBytes();
+
+	expect( bytes			).to.have.length( 574 );
+
+	const rebundled			= new Bundle( bytes );
+
+	expect( bundle.type		).to.equal( rebundled.type );
     });
 
 }
