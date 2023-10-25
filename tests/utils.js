@@ -46,4 +46,5 @@ export function webhappConfig ( happ_manifest ) {
 export default {
     dnaConfig,
     happConfig,
+    webhappConfig,
 };

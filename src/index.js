@@ -51,52 +51,61 @@ export class Bundle {
     #manifest				= null;
     #resources				= null;
 
-    static createDna ( manifest ) {
+    static createDna ( input ) {
 	const resources			= {};
 	const integrity_zome_names	= [];
-
-	manifest.integrity.zomes	= manifest.integrity.zomes.map( zome => {
-	    integrity_zome_names.push( zome.name );
-
-	    const rpath			= `${zome.name}.wasm`;
-	    resources[ rpath ]		= zome.bytes;
-
-	    delete zome.bytes;
-	    zome.bundled		= rpath;
-
-	    return Object.assign({
-		"hash": null,
-		"dylib": null
-	    }, zome );
-	});
-
-	manifest.coordinator.zomes	= manifest.coordinator.zomes.map( zome => {
-	    zome.dependencies.forEach( integrity_name => {
-		if ( !integrity_zome_names.includes( integrity_name ) )
-		    throw new Error(`Integrity dependency '${integrity_name}' does not exist; available dependencies are: ${integrity_zome_names.join(', ')}`);
-	    });
-
-	    const rpath			= `${zome.name}.wasm`;
-	    resources[ rpath ]		= zome.bytes;
-
-	    delete zome.bytes;
-	    zome.bundled		= rpath;
-
-	    return Object.assign({
-		"hash": null,
-		"dylib": null
-	    }, zome );
-	});
+	const manifest			= Object.assign({
+	    "manifest_version": "1",
+	}, input );
 
 	manifest.integrity		= Object.assign({
 	    "network_seed": null,
 	    "properties": null,
 	    "origin_time": (new Date()).toISOString(),
 	}, manifest.integrity );
+	manifest.coordinator		= Object.assign( {}, manifest.coordinator );
 
-	manifest			= Object.assign({
-	    "manifest_version": "1",
-	}, manifest );
+	manifest.integrity.zomes	= manifest.integrity.zomes.map( zome => {
+	    const config		= Object.assign({
+		"hash": null,
+		"dylib": null
+	    }, zome );
+
+	    integrity_zome_names.push( config.name );
+
+	    const rpath			= `${config.name}.wasm`;
+	    resources[ rpath ]		= new Uint8Array( config.bytes );
+
+	    delete config.bytes;
+	    config.bundled		= rpath;
+
+	    return config;
+	});
+
+	manifest.coordinator.zomes	= manifest.coordinator.zomes.map( zome => {
+	    const config		= Object.assign({
+		"hash": null,
+		"dylib": null
+	    }, zome );
+
+	    const rpath			= `${config.name}.wasm`;
+	    resources[ rpath ]		= new Uint8Array( config.bytes );
+
+	    config.dependencies		= config.dependencies.map( dep => {
+		if ( typeof dep === "string" )
+		    dep			= { "name": dep };
+
+		if ( !integrity_zome_names.includes( dep.name ) )
+		    throw new Error(`Integrity dependency '${dep.name}' does not exist; available dependencies are: ${integrity_zome_names.join(', ')}`);
+
+		return dep;
+	    });
+
+	    delete config.bytes;
+	    config.bundled		= rpath;
+
+	    return config;
+	});
 
 	return new Bundle({
 	    manifest,
@@ -104,37 +113,40 @@ export class Bundle {
 	});
     }
 
-    static createHapp ( manifest ) {
+    static createHapp ( input ) {
 	const resources			= {};
+	const manifest			= Object.assign({
+	    "manifest_version": "1",
+	}, input );
 
 	manifest.roles			= manifest.roles.map( role => {
 	    const rpath			= `${role.name}.dna`;
-	    resources[ rpath ]		= role.dna.bytes;
+	    resources[ rpath ]		= new Uint8Array( role.dna.bytes );
 
-	    delete role.dna.bytes;
-	    role.dna.bundled		= rpath;
-
-	    return Object.assign({
+	    const config		= Object.assign({
 		"provisioning": {
 		    "strategy": "create",
 		    "deferred": false
 		},
-		"dna": Object.assign({
-		    "modifiers": Object.assign({
-			"network_seed": null,
-			"properties": null,
-			"origin_time": null,
-			"quantum_time": null
-		    }, role.dna.modifiers ),
-		    "installed_hash": null,
-		    "clone_limit": 0
-		}, role.dna ),
 	    }, role );
-	});
 
-	manifest			= Object.assign({
-	    "manifest_version": "1",
-	}, manifest );
+	    config.dna			= Object.assign({
+		"installed_hash": null,
+		"clone_limit": 0
+	    }, config.dna ),
+
+	    config.dna.modifiers	= Object.assign({
+		"network_seed": null,
+		"properties": null,
+		"origin_time": null,
+		"quantum_time": null
+	    }, config.dna.modifiers );
+
+	    delete config.dna.bytes;
+	    config.dna.bundled		= rpath;
+
+	    return config;
+	});
 
 	return new Bundle({
 	    manifest,
@@ -142,12 +154,19 @@ export class Bundle {
 	});
     }
 
-    static createWebhapp ( manifest ) {
+    static createWebhapp ( input ) {
+	const manifest			= Object.assign({
+	    "manifest_version": "1",
+	}, input );
+
+	manifest.ui			= Object.assign( {}, manifest.ui );
+	manifest.happ_manifest		= Object.assign( {}, manifest.happ_manifest );
+
 	const resources			= {};
 
 	{
 	    const rpath			= "ui.zip";
-	    resources[ rpath ]		= manifest.ui.bytes;
+	    resources[ rpath ]		= new Uint8Array( manifest.ui.bytes );
 
 	    delete manifest.ui.bytes;
 	    manifest.ui.bundled		= rpath;
@@ -155,15 +174,11 @@ export class Bundle {
 
 	{
 	    const rpath			= "bundled.happ";
-	    resources[ rpath ]		= manifest.happ_manifest.bytes;
+	    resources[ rpath ]		= new Uint8Array( manifest.happ_manifest.bytes );
 
 	    delete manifest.happ_manifest.bytes;
 	    manifest.happ_manifest.bundled	= rpath;
 	}
-
-	manifest			= Object.assign({
-	    "manifest_version": "1",
-	}, manifest );
 
 	return new Bundle({
 	    manifest,

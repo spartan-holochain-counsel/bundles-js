@@ -19,6 +19,11 @@ import {
 const __dirname				= path.dirname( fileURLToPath( import.meta.url ) );
 
 const HAPP_1_BYTES			= await readFile( path.join( __dirname, `../fake_happ_1.happ` ) );
+const happ_config			= happConfig([{
+    "dna": {
+	"bytes":		Bundle.createDna( dnaConfig() ).toBytes(),
+    },
+}]);
 
 
 function basic_tests () {
@@ -32,22 +37,27 @@ function basic_tests () {
     });
 
     it("should create hApp bundle", async function () {
-	const config			= happConfig([{
-	    "dna": {
-		"bytes":		Bundle.createDna( dnaConfig() ).toBytes(),
-	    },
-	}]);
-	const bundle			= Bundle.createHapp( config );
+	const bundle			= Bundle.createHapp( happ_config );
 
 	expect( bundle.type		).to.equal("happ");
 
 	const bytes			= bundle.toBytes();
 
-	expect( bytes			).to.have.length( 424 );
+	expect( bytes			).to.have.length( 515 );
 
 	const rebundled			= new Bundle( bytes );
 
 	expect( bundle.type		).to.equal( rebundled.type );
+    });
+
+    it("should create a bundle again using the same config", async function () {
+	const bundle			= Bundle.createHapp( happ_config );
+
+	expect( bundle.type		).to.equal("happ");
+
+	const bytes			= bundle.toBytes();
+
+	expect( bytes			).to.have.length( 515 );
     });
 
 }

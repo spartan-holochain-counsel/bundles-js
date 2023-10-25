@@ -20,6 +20,15 @@ import {
 const __dirname				= path.dirname( fileURLToPath( import.meta.url ) );
 
 const WEBHAPP_1_BYTES			= await readFile( path.join( __dirname, `../fake_webhapp_1.webhapp` ) );
+const happ_config			= happConfig([{
+    "dna": {
+	"bytes":		Bundle.createDna( dnaConfig() ).toBytes(),
+    },
+}]);
+const happ_bundle			= Bundle.createHapp( happ_config );
+const webhapp_config			= webhappConfig({
+    "bytes": happ_bundle.toBytes(),
+});
 
 
 function basic_tests () {
@@ -35,26 +44,27 @@ function basic_tests () {
     });
 
     it("should create Webhapp bundle", async function () {
-	const happ_config		= happConfig([{
-	    "dna": {
-		"bytes":		Bundle.createDna( dnaConfig() ).toBytes(),
-	    },
-	}]);
-	const happ_bundle		= Bundle.createHapp( happ_config );
-	const config			= webhappConfig({
-	    "bytes": happ_bundle.toBytes(),
-	});
-	const bundle			= Bundle.createWebhapp( config );
+	const bundle			= Bundle.createWebhapp( webhapp_config );
 
 	expect( bundle.type		).to.equal("webhapp");
 
 	const bytes			= bundle.toBytes();
 
-	expect( bytes			).to.have.length( 574 );
+	expect( bytes			).to.have.length( 667 );
 
 	const rebundled			= new Bundle( bytes );
 
 	expect( bundle.type		).to.equal( rebundled.type );
+    });
+
+    it("should create a bundle again using the same config", async function () {
+	const bundle			= Bundle.createWebhapp( webhapp_config );
+
+	expect( bundle.type		).to.equal("webhapp");
+
+	const bytes			= bundle.toBytes();
+
+	expect( bytes			).to.have.length( 667 );
     });
 
 }

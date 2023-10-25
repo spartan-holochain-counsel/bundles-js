@@ -18,6 +18,7 @@ import {
 const __dirname				= path.dirname( fileURLToPath( import.meta.url ) );
 
 const DNA_1_BYTES			= await readFile( path.join( __dirname, `../fake_dna_1.dna` ) );
+const dna_config			= dnaConfig();
 
 
 function basic_tests () {
@@ -31,17 +32,27 @@ function basic_tests () {
     });
 
     it("should create DNA bundle", async function () {
-	const bundle			= Bundle.createDna( dnaConfig() );
+	const bundle			= Bundle.createDna( dna_config );
 
 	expect( bundle.type		).to.equal("dna");
 
 	const bytes			= bundle.toBytes();
 
-	expect( bytes			).to.have.length( 241 );
+	expect( bytes			).to.have.length( 242 );
 
 	const rebundled			= new Bundle( bytes );
 
 	expect( bundle.type		).to.equal( rebundled.type );
+    });
+
+    it("should create a bundle again using the same config", async function () {
+	const bundle			= Bundle.createDna( dna_config );
+
+	expect( bundle.type		).to.equal("dna");
+
+	const bytes			= bundle.toBytes();
+
+	expect( bytes			).to.have.length( 242 );
     });
 
 }
