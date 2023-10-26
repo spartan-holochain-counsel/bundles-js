@@ -124,10 +124,7 @@ export class Bundle {
 	    resources[ rpath ]		= new Uint8Array( role.dna.bytes );
 
 	    const config		= Object.assign({
-		"provisioning": {
-		    "strategy": "create",
-		    "deferred": false
-		},
+		"provisioning": null,
 	    }, role );
 
 	    config.dna			= Object.assign({

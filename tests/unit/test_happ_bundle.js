@@ -19,9 +19,12 @@ import {
 const __dirname				= path.dirname( fileURLToPath( import.meta.url ) );
 
 const HAPP_1_BYTES			= await readFile( path.join( __dirname, `../fake_happ_1.happ` ) );
-const happ_config			= happConfig([{
+
+const TEST_DNA_CONFIG			= dnaConfig();
+const TEST_HAPP_CONFIG			= happConfig([{
+    "name": "fake-role-1",
     "dna": {
-	"bytes":		Bundle.createDna( dnaConfig() ).toBytes(),
+	"bytes": Bundle.createDna( TEST_DNA_CONFIG ).toBytes(),
     },
 }]);
 
@@ -37,13 +40,13 @@ function basic_tests () {
     });
 
     it("should create hApp bundle", async function () {
-	const bundle			= Bundle.createHapp( happ_config );
+	const bundle			= Bundle.createHapp( TEST_HAPP_CONFIG );
 
 	expect( bundle.type		).to.equal("happ");
 
 	const bytes			= bundle.toBytes();
 
-	expect( bytes			).to.have.length( 515 );
+	expect( bytes			).to.have.length( 491 );
 
 	const rebundled			= new Bundle( bytes );
 
@@ -51,13 +54,13 @@ function basic_tests () {
     });
 
     it("should create a bundle again using the same config", async function () {
-	const bundle			= Bundle.createHapp( happ_config );
+	const bundle			= Bundle.createHapp( TEST_HAPP_CONFIG );
 
 	expect( bundle.type		).to.equal("happ");
 
 	const bytes			= bundle.toBytes();
 
-	expect( bytes			).to.have.length( 515 );
+	expect( bytes			).to.have.length( 491 );
     });
 
 }
