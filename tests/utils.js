@@ -1,4 +1,21 @@
 
+import crypto				from 'crypto';
+import { expect }			from 'chai';
+
+
+export function linearSuite ( name, setup_fn, args_fn ) {
+    describe( name, function () {
+	beforeEach(function () {
+	    let parent_suite		= this.currentTest.parent;
+	    if ( parent_suite.tests.some(test => test.state === "failed") )
+		this.skip();
+	    if ( parent_suite.parent?.tests.some(test => test.state === "failed") )
+		this.skip();
+	});
+	setup_fn.call( this, args_fn );
+    });
+}
+
 
 export function dnaConfig () {
     return {
@@ -43,8 +60,19 @@ export function webhappConfig ( happ_manifest ) {
 }
 
 
+export function sha256 ( bytes ) {
+    const hash				= crypto.createHash("sha256");
+
+    hash.update( bytes );
+
+    return hash.digest("hex");
+}
+
+
 export default {
+    linearSuite,
     dnaConfig,
     happConfig,
     webhappConfig,
+    sha256,
 };

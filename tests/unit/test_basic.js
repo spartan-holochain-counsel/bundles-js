@@ -6,7 +6,12 @@ import { fileURLToPath }		from 'url';
 import { readFile }			from 'fs/promises';
 
 import { expect }			from 'chai';
+import json				from '@whi/json';
 
+import {
+    linearSuite,
+    sha256,
+}					from '../utils.js';
 import {
     Bundle,
 }					from '../../src/index.js';
@@ -20,25 +25,44 @@ const WEBHAPP_1_BYTES			= await readFile( path.join( __dirname, `../fake_webhapp
 
 function basic_tests () {
 
-    it("should init DNA bundle", async () => {
+    it("should init DNA bundle", async function () {
 	const bundle			= new Bundle( DNA_1_BYTES );
-	log.debug("%s", bundle );
+	log.normal("DNA bundle: %s", json.debug(bundle) );
 
 	expect( bundle.type		).to.equal("dna");
     });
 
-    it("should init hApp bundle", async () => {
+    it("should init hApp bundle", async function () {
 	const bundle			= new Bundle( HAPP_1_BYTES );
-	log.debug("%s", bundle );
+	log.normal("hApp bundle: %s", json.debug(bundle) );
 
 	expect( bundle.type		).to.equal("happ");
     });
 
-    it("should init WebhApp bundle", async () => {
+    it("should init WebhApp bundle", async function () {
 	const bundle			= new Bundle( WEBHAPP_1_BYTES );
-	log.debug("%s", bundle );
+	log.normal("Webhapp bundle: %s", json.debug(bundle) );
 
 	expect( bundle.type		).to.equal("webhapp");
+    });
+
+    it("should verify same DNA bundle contents", async function () {
+	const bundle			= new Bundle( DNA_1_BYTES );
+
+	const source_manifest		= bundle.manifest.source;
+	const bundle_manifest		= bundle.manifest.toJSON();
+
+	expect( source_manifest		).to.deep.equal( bundle_manifest );
+
+	const mp_source_hash		= sha256( bundle.msgpack_source );
+	const mp_bundle_hash		= sha256( bundle.toEncoded() );
+
+	expect( mp_source_hash		).to.equal( mp_bundle_hash );
+
+	const source_hash		= sha256( bundle.source );
+	const bundle_hash		= sha256( bundle.toGzipped() );
+
+	expect( source_hash		).to.not.equal( bundle_hash );
     });
 
 }
@@ -48,7 +72,7 @@ function errors_tests () {
 
 describe("Bundles", () => {
 
-    describe("Basic", basic_tests );
-    describe("Errors", errors_tests );
+    linearSuite("Basic", basic_tests );
+    linearSuite("Errors", errors_tests );
 
 });

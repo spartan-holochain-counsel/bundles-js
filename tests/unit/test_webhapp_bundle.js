@@ -41,8 +41,8 @@ function basic_tests () {
 
 	const happ			= bundle.happ();
 	const ui			= bundle.ui();
-	log.debug("hApp:", happ );
-	log.debug("UI:", ui );
+	log.normal("hApp: %s", json.debug(happ) );
+	log.normal("UI: %s", json.debug(ui) );
     });
 
     it("should create Webhapp bundle", async function () {

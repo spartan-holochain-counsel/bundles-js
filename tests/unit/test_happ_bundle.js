@@ -36,7 +36,7 @@ function basic_tests () {
 	expect( bundle.type		).to.equal("happ");
 
 	const dnas			= bundle.dnas();
-	log.debug("DNAs:", dnas.map( dna => String(dna)) );
+	log.normal("DNAs: %s", json.debug(dnas) );
     });
 
     it("should create hApp bundle", async function () {

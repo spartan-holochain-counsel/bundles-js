@@ -13,32 +13,27 @@ build:			node_modules
 #
 # Testing
 #
-test:				test-unit
-test-debug:			test-unit-debug
+DEBUG_LEVEL	       ?= warn
+TEST_ENV_VARS		= LOG_LEVEL=$(DEBUG_LEVEL)
+MOCHA_OPTS		= -n enable-source-maps -t 5000
+
+test:
+	make -s test-unit
 
 test-unit:			test-setup
-	npx mocha ./tests/unit/test_basic.js
-	make test-unit-dna
-	make test-unit-happ
-	make test-unit-webhapp
-test-unit-debug:		test-setup
-	LOG_LEVEL=trace npx mocha ./tests/unit/test_basic.js
-	make test-unit-dna-debug
-	make test-unit-happ-debug
-	make test-unit-webhapp-debug
+	make -s test-unit-basic
+	make -s test-unit-dna
+	make -s test-unit-happ
+	make -s test-unit-webhapp
 
+test-unit-basic:		test-setup
+	$(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./tests/unit/test_basic.js
 test-unit-dna:			test-setup
-	LOG_LEVEL=warn npx mocha ./tests/unit/test_dna_bundle.js
-test-unit-dna-debug:		test-setup
-	LOG_LEVEL=trace npx mocha ./tests/unit/test_dna_bundle.js
+	$(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./tests/unit/test_dna_bundle.js
 test-unit-happ:			test-setup
-	LOG_LEVEL=warn npx mocha ./tests/unit/test_happ_bundle.js
-test-unit-happ-debug:		test-setup
-	LOG_LEVEL=trace npx mocha ./tests/unit/test_happ_bundle.js
+	$(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./tests/unit/test_happ_bundle.js
 test-unit-webhapp:		test-setup
-	LOG_LEVEL=warn npx mocha ./tests/unit/test_webhapp_bundle.js
-test-unit-webhapp-debug:	test-setup
-	LOG_LEVEL=trace npx mocha ./tests/unit/test_webhapp_bundle.js
+	$(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./tests/unit/test_webhapp_bundle.js
 
 test-setup:		tests/fake_zome_1.wasm	\
 			tests/fake_zome_2.wasm	\

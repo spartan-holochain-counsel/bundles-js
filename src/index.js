@@ -8,35 +8,9 @@ import {
     gzipSync,
     gunzipSync,
 }					from 'fflate';
+import json				from '@whi/json';
 
 import { set_tostringtag }		from './utils.js';
-
-
-export function unpack_bundle ( bytes ) {
-    log.normal("Unpacking bundle with %s bytes", bytes.length );
-    let msgpack_bytes			= gunzipSync( bytes );
-    log.normal("Unzipped package: %s bytes", msgpack_bytes.length );
-    let bundle				= decode( msgpack_bytes );
-    log.normal("Decoded msgpack content (%s resources)", Object.keys(bundle.resources).length );
-
-    for (let path in bundle.resources) {
-	bundle.resources[path]		= new Uint8Array( bundle.resources[path] );
-    }
-
-    log.normal("Found resource: %s", Object.keys(bundle.resources) );
-    return bundle;
-}
-
-export function pack_bundle ( bundle ) {
-    let msgpack_bytes			= encode( bundle );
-    log.normal("Encoded msgpack content (%s bytes)", msgpack_bytes.length );
-    let bytes				= gzipSync( msgpack_bytes, {
-	"mtime": 0,
-    });
-    log.normal("Zipped package: %s bytes", bytes.length );
-
-    return bytes;
-}
 
 
 function derive_manifest_version ( manifest ) {
@@ -48,8 +22,30 @@ function derive_manifest_version ( manifest ) {
 
 
 export class Bundle {
+    #source				= null;
+    #msgpack_source			= null;
     #manifest				= null;
     #resources				= null;
+
+    static gunzip ( bytes ) {
+	let msgpack_bytes			= gunzipSync( bytes );
+
+	log.debug("Gunzipped bytes (%s) to msgpack bytes (%s)", bytes.length, msgpack_bytes.length );
+	return msgpack_bytes;
+    }
+
+    static msgpackDecode ( bytes ) {
+	let bundle				= decode( bytes );
+
+	for ( let path in bundle.resources ) {
+	    bundle.resources[path]		= new Uint8Array( bundle.resources[path] );
+	}
+
+	log.trace("Msgpack bytes (%s) to bundle: %s", () => [
+	    bytes.length, json.debug(bundle)
+	]);
+	return bundle;
+    }
 
     static createDna ( input ) {
 	const resources			= {};
@@ -186,8 +182,12 @@ export class Bundle {
     constructor ( bundle, expected_type ) {
 	if ( Array.isArray( bundle ) )
 	    bundle			= new Uint8Array(bundle);
-	if ( bundle instanceof Uint8Array )
-	    bundle			= unpack_bundle( bundle );
+
+	if ( bundle instanceof Uint8Array ) {
+	    this.#source		= bundle;
+	    this.#msgpack_source	= Bundle.gunzip( bundle );
+	    bundle			= Bundle.msgpackDecode( this.msgpack_source );
+	}
 
 	// validate_bundle( bundle )
 
@@ -196,9 +196,14 @@ export class Bundle {
 
 	if ( expected_type && expected_type !== this.type )
 	    throw new TypeError(`Bundle contents do not match expect type '${expected_type}'; found type '${this.type}'`);
+    }
 
-	// console.log( this.manifest );
-	// console.log( this.resources );
+    get source () {
+	return this.#source;
+    }
+
+    get msgpack_source () {
+	return this.#msgpack_source;
     }
 
     get manifest () {
@@ -217,8 +222,27 @@ export class Bundle {
 	return this.manifest.type;
     }
 
+    toEncoded () {
+	const content			= this.toJSON();
+	log.trace("Msgpack encoding content: %s", () => [
+	    json.debug(content)
+	]);
+	return encode( content )
+    }
+
+    toGzipped () {
+	const msgpack_bytes		= this.toEncoded();
+	const gzip_options		= {
+	    "level": 6,
+	    "mtime": 0,
+	};
+
+	log.debug("Gzip encoding bytes (length %s)", msgpack_bytes.length );
+	return gzipSync( msgpack_bytes, gzip_options );
+    }
+
     toBytes () {
-	return pack_bundle( this.toJSON() );
+	return this.toGzipped();
     }
 
     toString () {

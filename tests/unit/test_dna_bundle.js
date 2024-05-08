@@ -29,7 +29,7 @@ function basic_tests () {
 	expect( bundle.type		).to.equal("dna");
 
 	const zomes			= bundle.zomes();
-	log.debug("Zomes:", zomes );
+	log.normal("Zomes: %s", json.debug(zomes) );
     });
 
     it("should create DNA bundle", async function () {
