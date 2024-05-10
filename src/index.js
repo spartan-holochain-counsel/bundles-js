@@ -189,13 +189,13 @@ export class Bundle {
 	    bundle			= Bundle.msgpackDecode( this.msgpack_source );
 	}
 
-	// validate_bundle( bundle )
-
 	this.#manifest			= derive_manifest_version( bundle.manifest );
 	this.#resources			= new Resources( bundle.resources );
 
 	if ( expected_type && expected_type !== this.type )
 	    throw new TypeError(`Bundle contents do not match expect type '${expected_type}'; found type '${this.type}'`);
+
+	this.validate();
     }
 
     get source () {
@@ -220,6 +220,19 @@ export class Bundle {
 
     get type () {
 	return this.manifest.type;
+    }
+
+    validate () {
+	if ( this.type === "dna" ) {
+	    this.zomes();
+	}
+	else if ( this.type === "happ" ) {
+	    this.dnas();
+	}
+	else if ( this.type === "webhapp" ) {
+	    this.happ();
+	    this.ui();
+	}
     }
 
     toEncoded () {
@@ -262,13 +275,23 @@ export class Bundle {
 
 	return {
 	    "integrity": this.manifest.integrity.zomes.map( config => {
+		const bytes		= this.resources[ config.bundled ];
+
+		if ( !(bytes instanceof Uint8Array) )
+		    throw new TypeError(`Bundle is missing resource for integrity '${config.name}'; expected resource path '${config.bundled}'`);
+
 		return Object.assign( {}, config, {
-		    "bytes":	new Uint8Array( this.resources[ config.bundled ] ),
+		    "bytes":		new Uint8Array( bytes ),
 		});
 	    }),
 	    "coordinator": this.manifest.coordinator.zomes.map( config => {
+		const bytes		= this.resources[ config.bundled ];
+
+		if ( !(bytes instanceof Uint8Array) )
+		    throw new TypeError(`Bundle is missing resource for coordinator '${config.name}'; expected resource path '${config.bundled}'`);
+
 		return Object.assign( {}, config, {
-		    "bytes":	new Uint8Array( this.resources[ config.bundled ] ),
+		    "bytes":		new Uint8Array( bytes ),
 		});
 	    }),
 	};
@@ -278,8 +301,14 @@ export class Bundle {
 	if ( !["happ", "webhapp"].some( k => k === this.type ) )
 	    throw new Error(`Wrong bundle type '${this.type}'; only 'happ' or 'webhapp' types contain DNAs`);
 
-	return Object.values( this.resources )
-	    .map( bytes => new Bundle( bytes, "dna" ) );
+	return this.manifest.roles.map( config => {
+	    const bytes		= this.resources[ config.dna.bundled ];
+
+	    if ( !(bytes instanceof Uint8Array) )
+		throw new TypeError(`Bundle is missing resource for DNA '${config.name}'; expected resource path '${config.bundled}'`);
+
+	    return new Bundle( bytes, "dna" );
+	})
     }
 
     happ () {
@@ -287,7 +316,12 @@ export class Bundle {
 	    throw new Error(`Wrong bundle type '${this.type}'; only 'webhapp' types contains a hApp`);
 
 	const rpath			= this.manifest.happ_manifest.bundled;
-	return new Bundle( this.resources[ rpath ], "happ" );
+	const bytes			= this.resources[ rpath ];
+
+	if ( !(bytes instanceof Uint8Array) )
+	    throw new TypeError(`Bundle is missing resource for hApp; expected resource path '${rpath}'`);
+
+	return new Bundle( bytes, "happ" );
     }
 
     ui () {
@@ -295,7 +329,12 @@ export class Bundle {
 	    throw new Error(`Wrong bundle type '${this.type}'; only 'webhapp' types contains a UI`);
 
 	const rpath			= this.manifest.ui.bundled;
-	return new Uint8Array( this.resources[ rpath ] );
+	const bytes			= this.resources[ rpath ];
+
+	if ( !(bytes instanceof Uint8Array) )
+	    throw new TypeError(`Bundle is missing resource for UI; expected resource path '${rpath}'`);
+
+	return bytes;
     }
 
 }
