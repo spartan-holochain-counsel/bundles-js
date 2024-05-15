@@ -362,6 +362,7 @@ set_tostringtag( Bundle );
 export class ManifestV1 {
     static VERSION			= "1";
     #source				= null;
+    #type				= null;
 
     constructor ( manifest ) {
 	this.#source			= manifest;
@@ -379,19 +380,23 @@ export class ManifestV1 {
 	return this.constructor.VERSION;
     }
 
+    get type () {
+	return this.#type;
+    }
+
     deriveType () {
 	if ( ["coordinator", "integrity" ].every(k => k in this.source) )
-	    this.type			= "dna";
+	    this.#type			= "dna";
 	else if ( "roles" in this.source )
-	    this.type			= "happ";
+	    this.#type			= "happ";
 	else if ( ["ui", "happ_manifest" ].every(k => k in this.source) )
-	    this.type			= "webhapp";
+	    this.#type			= "webhapp";
 	else
 	    throw new Error(`Unknown manifest type with properties: ${Object.keys(this.source)}`);
     }
 
     toJSON () {
-	return cloneDeep( this.source );
+	return cloneDeep( Object.assign( {}, this ) );
     }
 
 }
@@ -416,6 +421,11 @@ export class Resources {
 set_tostringtag( Resources );
 
 
+export {
+    log,
+};
+
 export default {
+    log,
     Bundle
 };
