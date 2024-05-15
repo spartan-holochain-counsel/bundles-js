@@ -9,6 +9,7 @@ import {
     gunzipSync,
 }					from 'fflate';
 import json				from '@whi/json';
+import cloneDeep			from 'clone-deep';
 
 import { set_tostringtag }		from './utils.js';
 
@@ -52,14 +53,13 @@ export class Bundle {
 	const integrity_zome_names	= [];
 	const manifest			= Object.assign({
 	    "manifest_version": "1",
-	}, input );
+	}, cloneDeep( input ) );
 
 	manifest.integrity		= Object.assign({
 	    "network_seed": null,
 	    "properties": null,
 	    "origin_time": (new Date()).toISOString(),
 	}, manifest.integrity );
-	manifest.coordinator		= Object.assign( {}, manifest.coordinator );
 
 	manifest.integrity.zomes	= manifest.integrity.zomes.map( zome => {
 	    const config		= Object.assign({
@@ -113,7 +113,7 @@ export class Bundle {
 	const resources			= {};
 	const manifest			= Object.assign({
 	    "manifest_version": "1",
-	}, input );
+	}, cloneDeep( input ) );
 
 	manifest.roles			= manifest.roles.map( role => {
 	    const rpath			= `${role.name}.dna`;
@@ -150,10 +150,7 @@ export class Bundle {
     static createWebhapp ( input ) {
 	const manifest			= Object.assign({
 	    "manifest_version": "1",
-	}, input );
-
-	manifest.ui			= Object.assign( {}, manifest.ui );
-	manifest.happ_manifest		= Object.assign( {}, manifest.happ_manifest );
+	}, cloneDeep( input ) );
 
 	const resources			= {};
 
@@ -235,16 +232,18 @@ export class Bundle {
 	}
     }
 
-    toEncoded () {
+    toEncoded ({ sortKeys = false } = {}) {
 	const content			= this.toJSON();
 	log.trace("Msgpack encoding content: %s", () => [
 	    json.debug(content)
 	]);
-	return encode( content )
+	return encode( content, {
+	    sortKeys,
+	})
     }
 
-    toGzipped () {
-	const msgpack_bytes		= this.toEncoded();
+    toGzipped ({ sortKeys } = {}) {
+	const msgpack_bytes		= this.toEncoded({ sortKeys });
 	const gzip_options		= {
 	    "level": 6,
 	    "mtime": 0,
@@ -254,8 +253,8 @@ export class Bundle {
 	return gzipSync( msgpack_bytes, gzip_options );
     }
 
-    toBytes () {
-	return this.toGzipped();
+    toBytes ({ sortKeys } = {}) {
+	return this.toGzipped({ sortKeys });
     }
 
     toString () {
@@ -280,7 +279,7 @@ export class Bundle {
 		if ( !(bytes instanceof Uint8Array) )
 		    throw new TypeError(`Bundle is missing resource for integrity '${config.name}'; expected resource path '${config.bundled}'`);
 
-		return Object.assign( {}, config, {
+		return Object.assign( {}, cloneDeep( config ), {
 		    "bytes":		new Uint8Array( bytes ),
 		});
 	    }),
@@ -290,15 +289,34 @@ export class Bundle {
 		if ( !(bytes instanceof Uint8Array) )
 		    throw new TypeError(`Bundle is missing resource for coordinator '${config.name}'; expected resource path '${config.bundled}'`);
 
-		return Object.assign( {}, config, {
+		return Object.assign( {}, cloneDeep( config ), {
 		    "bytes":		new Uint8Array( bytes ),
 		});
 	    }),
 	};
     }
 
+    roles () {
+	if ( "happ" !== this.type )
+	    throw new Error(`Wrong bundle type '${this.type}'; only 'happ' or 'webhapp' types contain DNAs`);
+
+	return this.manifest.roles.map( config => {
+	    const bytes		= this.resources[ config.dna.bundled ];
+
+	    if ( !(bytes instanceof Uint8Array) )
+		throw new TypeError(`Bundle is missing resource for DNA '${config.name}'; expected resource path '${config.bundled}'`);
+
+	    return {
+		...config,
+		bundle () {
+		    return new Bundle( bytes, "dna" );
+		},
+	    };
+	})
+    }
+
     dnas () {
-	if ( !["happ", "webhapp"].some( k => k === this.type ) )
+	if ( "happ" !== this.type )
 	    throw new Error(`Wrong bundle type '${this.type}'; only 'happ' or 'webhapp' types contain DNAs`);
 
 	return this.manifest.roles.map( config => {
@@ -349,7 +367,7 @@ export class ManifestV1 {
 	this.#source			= manifest;
 	this.deriveType();
 
-	Object.assign( this, manifest );
+	Object.assign( this, cloneDeep( manifest ) );
 
     }
 
@@ -373,7 +391,7 @@ export class ManifestV1 {
     }
 
     toJSON () {
-	return Object.assign( {}, this.source );
+	return cloneDeep( this.source );
     }
 
 }
@@ -383,7 +401,7 @@ set_tostringtag( ManifestV1 );
 export class Resources {
 
     constructor ( resources ) {
-	Object.assign( this, resources );
+	Object.assign( this, cloneDeep( resources ) );
     }
 
     get names () {
@@ -391,7 +409,7 @@ export class Resources {
     }
 
     toJSON () {
-	return Object.assign( {}, this );
+	return cloneDeep( Object.assign( {}, this ) );
     }
 
 }

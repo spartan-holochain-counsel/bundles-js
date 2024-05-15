@@ -25,6 +25,7 @@
     "@msgpack/msgpack": "^2.7.0",
     "@whi/json": "^0.1.7",
     "@whi/weblogger": "^0.4.0",
+    "clone-deep": "^4.0.1",
     "fflate": "^0.8.1"
   },
   "devDependencies": {
