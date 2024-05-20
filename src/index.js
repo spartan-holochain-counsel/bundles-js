@@ -38,10 +38,6 @@ export class Bundle {
     static msgpackDecode ( bytes ) {
 	let bundle				= decode( bytes );
 
-	for ( let path in bundle.resources ) {
-	    bundle.resources[path]		= new Uint8Array( bundle.resources[path] );
-	}
-
 	log.trace("Msgpack bytes (%s) to bundle: %s", () => [
 	    bytes.length, json.debug(bundle)
 	]);
@@ -297,8 +293,11 @@ export class Bundle {
     }
 
     roles () {
+	if ( "webhapp" === this.type )
+	    throw new Error(`Wrong bundle type '${this.type}'; use '<Bundle>.happ().roles()' instead`);
+
 	if ( "happ" !== this.type )
-	    throw new Error(`Wrong bundle type '${this.type}'; only 'happ' or 'webhapp' types contain DNAs`);
+	    throw new Error(`Wrong bundle type '${this.type}'; only 'happ' types contain roles`);
 
 	return this.manifest.roles.map( config => {
 	    const bytes		= this.resources[ config.dna.bundled ];
@@ -307,7 +306,7 @@ export class Bundle {
 		throw new TypeError(`Bundle is missing resource for DNA '${config.name}'; expected resource path '${config.bundled}'`);
 
 	    return {
-		...config,
+		...cloneDeep( config ),
 		bundle () {
 		    return new Bundle( bytes, "dna" );
 		},
@@ -316,8 +315,11 @@ export class Bundle {
     }
 
     dnas () {
+	if ( "webhapp" === this.type )
+	    throw new Error(`Wrong bundle type '${this.type}'; use '<Bundle>.happ().dnas()' instead`);
+
 	if ( "happ" !== this.type )
-	    throw new Error(`Wrong bundle type '${this.type}'; only 'happ' or 'webhapp' types contain DNAs`);
+	    throw new Error(`Wrong bundle type '${this.type}'; only 'happ' types contain DNAs`);
 
 	return this.manifest.roles.map( config => {
 	    const bytes		= this.resources[ config.dna.bundled ];
